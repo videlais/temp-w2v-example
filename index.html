@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word2Vector Database Look-up</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Word2Vector Database: Historical Sources (short stories from 1917 - 1921)</h1>
+    <hr>
+    <div class="row">
+        <div class="column">
+            <h2>Search 10 Closest Words</h2>
+            <h3>Choose a Random Word:</h3>
+            <div id="randomWords"></div>
+            <button type="button" id="randomWordButton">Get More Random Words</button>
+            <h3>Enter a term:</h3>
+            <form>
+                <label for="input1">Search Term:</label>
+                <input type="text" id="input1" name="input1">
+                <button type="button" id="submit">Submit</button>
+            </form>
+            <h3>Search Results:</h3>
+            <div id="results"></div>
+        </div>
+        <div class="column">
+            <form>
+                <label for="input1">Difference ("subtraction") between words:</label>
+                <input type="text" id="diff1" name="diff1"><strong>&nbsp;-&nbsp;</strong><input type="text" id="diff2" name="diff2">
+                <button type="button" id="submitDiff">Submit</button>
+            </form>
+            <div id="resultsDiff"></div>
+        </div>
+    </div>
+    <div id="loading" class="loading">Loading...</div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="word2vecutils.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
