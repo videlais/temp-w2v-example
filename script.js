@@ -42,8 +42,22 @@ $(document).ready(function() {
     $('#diff1').val('');
     $('#diff2').val('');
 
+    let historicText = '';
+
     // Setup a click event for the random words
     $('#randomWordButton').on('click', () => {addRandomWords()});
+
+    // Retrieve the historic-material.txt file
+    $.get('historic-materials.txt', (data) => {
+        // Loaded file is separated by spaces.
+        historicText = data.split(' ');
+    }
+    ).fail(function() {
+        console.error('Failed to load historic-material.txt');
+        // Handle the error here, e.g., show an error message to the user
+        // Update the HTML element #historic to indicate failure
+        $("#historic").html("Failed to load historic material.");
+    });
 
     // Load the JSON file containing word vectors
     $.getJSON('word_vectors.json', function(data) {
@@ -63,10 +77,13 @@ $(document).ready(function() {
             // Check if word1 is in the word vectors
             var vec = window.Word2VecUtils.getVec(word1);
 
+            let result = [];
+
             // If the response is an Array, it is a vector.
             // If it is false, the word does not exist in the database.
             if(Array.isArray(vec)) {
-                var result = window.Word2VecUtils.getNClosestMatches(11, vec);
+                result = window.Word2VecUtils.getNClosestMatches(11, vec);
+                //result = window.Word2VecUtils.findSimilarWords(11, word1);
                 // Display the result in the HTML element with id "results"
                 // For the array, present a table with the words and their distances
                 var table = '<table><tr><th>Word</th></tr>';
@@ -74,7 +91,63 @@ $(document).ready(function() {
                     table += '<tr><td>' + result[i][0] + '</td></tr>';
                 }
                 table += '</table>';
+
+                // Display the table in the HTML element with id "results"
                 $("#results").html(table);
+
+                // Show the historic material
+                // First, check if historicText is not empty
+                if(historicText.length > 0) {
+                    console.log("Historic text is not empty");
+                    // Find every occurrence of the word in the historic word array
+                    const indexes = historicText.reduce((acc, word, index) => {
+                        if (word === word1) {
+                            acc.push(index);
+                        }
+                        return acc;
+                    }
+                    , []);
+                    
+                    // Limit the array to 10 occurrences or less
+                    if (indexes.length > 10) {
+                        indexes.length = 10;
+                    }
+
+                    // For every occurrence of the word, add a line item.
+                    // The line item should have the five words before and after the occurrence.
+                    var historicWordsHtml = '<ul>';
+                    for (var i = 0; i < indexes.length; i++) {
+                        var start = Math.max(0, indexes[i] - 5);
+                        var end = Math.min(historicText.length, indexes[i] + 6);
+                        var words = historicText.slice(start, end);
+                        // Add a <span> tag to highlight the word
+                        words = words.map((word, index) => {
+                            if (index === 5) {
+                                return `<span style="color: green; font-weight: bold;">${word}</span>`;
+                            }
+                            return word;
+                        });
+
+                        // For every word in results found in words, add a <span> tag to highlight the word
+                        for (var j = 0; j < result.length; j++) {
+                            if (words.includes(result[j][0]) && result[j][0] !== word1) {
+                                console.log("Found word: " + result[j][0]);
+                                words[words.indexOf(result[j][0])] = `<span style="color: orange; font-weight: bold;">${result[j][0]}</span>`;
+                            }
+                        }
+
+                        // Add the words to the list
+                        // The word is highlighted in green and bold
+                        historicWordsHtml += '<li>' + words.join(' ') + '</li>';
+                    }
+                    // Close the unordered list.
+                    historicWordsHtml += '</ul>';
+                    console.log("Historic words: " + historicWordsHtml);
+                    
+                    // Display the historic words in the HTML element with id "historic"
+                    $("#historic").html(historicWordsHtml);
+                }
+
             } else {
                 $("#results").html("Word not found in the database.");
             }
