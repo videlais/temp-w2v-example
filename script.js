@@ -42,6 +42,12 @@ $(document).ready(function() {
     $('#diff1').val('');
     $('#diff2').val('');
 
+    // Prevent pressing ENTER from reloading the page
+    // This is done by preventing the default action of the form submission.
+    $('.submissions').on('submit', function(event) {
+        event.preventDefault();
+    });
+
     // Setup a click event for the random words
     $('#randomWordButton').on('click', () => {addRandomWords()});
 
