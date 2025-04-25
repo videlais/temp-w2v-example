@@ -47,6 +47,7 @@ $(document).ready(function() {
     $('.submissions').on('submit', function(event) {
         event.preventDefault();
     });
+
     let historicText = '';
 
     // Setup a click event for the random words
@@ -64,10 +65,25 @@ $(document).ready(function() {
         $("#historic").html("Failed to load historic material.");
     });
 
-    // Load the JSON file containing word vectors
-    $.getJSON('word_vectors.json', function(data) {
-        // Pass the JSON data to the setup function.
-        window.Word2VecUtils.setup(data);
+    const numberOfFileParts = 76; //Number of parts to load
+    const fileParts = [];
+
+    // Load the word vectors in parts
+    for (let i = 0; i < numberOfFileParts; i++) {
+        fileParts.push(`parts/word_vectors_${i}.json`);
+    }
+
+    // Load the JSON files containing word vectors in parts
+    $.when(...fileParts.map(file => $.get(file))).done(function(...responses) {
+
+        // For each response, merge the responses into a single object
+        let mergedData = responses.reduce((acc, response) => {
+            // Merge the arrays of objects into a single object
+            return { ...acc, ...response[0] };
+        }, {});
+
+        // Pass the merged JSON data to the setup function.
+        window.Word2VecUtils.setup(mergedData);
 
         // Hide the loading message
         $("#loading").hide();
@@ -103,7 +119,6 @@ $(document).ready(function() {
                 // Show the historic material
                 // First, check if historicText is not empty
                 if(historicText.length > 0) {
-                    console.log("Historic text is not empty");
                     // Find every occurrence of the word in the historic word array
                     const indexes = historicText.reduce((acc, word, index) => {
                         if (word === word1) {
@@ -136,7 +151,6 @@ $(document).ready(function() {
                         // For every word in results found in words, add a <span> tag to highlight the word
                         for (var j = 0; j < result.length; j++) {
                             if (words.includes(result[j][0]) && result[j][0] !== word1) {
-                                console.log("Found word: " + result[j][0]);
                                 words[words.indexOf(result[j][0])] = `<span style="color: orange; font-weight: bold;">${result[j][0]}</span>`;
                             }
                         }
@@ -147,7 +161,6 @@ $(document).ready(function() {
                     }
                     // Close the unordered list.
                     historicWordsHtml += '</ul>';
-                    console.log("Historic words: " + historicWordsHtml);
                     
                     // Display the historic words in the HTML element with id "historic"
                     $("#historic").html(historicWordsHtml);
@@ -182,10 +195,13 @@ $(document).ready(function() {
                 $("#resultsDiff").html("One or both words not found in the database.");
             }
         });
+
+            
     }).fail(function() {
-        console.error('Failed to load word_vectors.json');
+        console.error('Failed to load word_vectors_part files');
         // Handle the error here, e.g., show an error message to the user
         // Update the HTML element #loading to indicate failure
         $("#loading").html("Failed to load word vectors.");
     });
+
 });
